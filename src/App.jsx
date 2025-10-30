@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Edit2, X, Calendar, TrendingUp } from 'lucide-react';
 
-const STORAGE_KEY = 'weekly-planner-data';
-
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
 const HOURS = [
   '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', 
@@ -16,7 +14,7 @@ const STATUSES = [
   { value: 'annulé', label: 'Annulé', color: 'bg-slate-50 text-slate-700 border-slate-200' }
 ];
 
-const WeeklyPlanner = () => {
+function App() {
   const [currentWeekStart, setCurrentWeekStart] = useState(getMonday(new Date()));
   const [appointments, setAppointments] = useState({});
   const [hoveredSlot, setHoveredSlot] = useState(null);
@@ -36,12 +34,24 @@ const WeeklyPlanner = () => {
 
   async function loadData() {
     try {
-      const result = await window.storage.get(STORAGE_KEY);
-      if (result && result.value) {
-        setAppointments(JSON.parse(result.value));
+      console.log('🔄 Chargement des données...');
+      const response = await fetch('/api/appointments');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ Données chargées:', data);
+      
+      if (data.appointments && Object.keys(data.appointments).length > 0) {
+        setAppointments(data.appointments);
+        console.log('📊 Rendez-vous trouvés:', Object.keys(data.appointments).length);
+      } else {
+        console.log('ℹ️ Aucun rendez-vous trouvé');
       }
     } catch (error) {
-      console.log('Première utilisation ou données non disponibles');
+      console.error('❌ Erreur de chargement:', error);
     } finally {
       setLoading(false);
     }
@@ -49,9 +59,23 @@ const WeeklyPlanner = () => {
 
   async function saveData() {
     try {
-      await window.storage.set(STORAGE_KEY, JSON.stringify(appointments));
+      console.log('💾 Sauvegarde des données...', Object.keys(appointments).length, 'rendez-vous');
+      const response = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ appointments }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Données sauvegardées:', result);
     } catch (error) {
-      console.error('Erreur de sauvegarde:', error);
+      console.error('❌ Erreur de sauvegarde:', error);
     }
   }
 
@@ -134,13 +158,18 @@ const WeeklyPlanner = () => {
 
   function getSessionsSummary() {
     const summary = {};
-    Object.values(appointments).forEach(apt => {
+    Object.entries(appointments).forEach(([key, apt]) => {
       if (apt.status === 'présent') {
-        const fullName = `${apt.firstName} ${apt.lastName}`;
-        summary[fullName] = (summary[fullName] || 0) + 1;
+        const fullName = `${apt.firstName.trim().toLowerCase()}_${apt.lastName.trim().toLowerCase()}`;
+        const displayName = `${apt.firstName} ${apt.lastName}`;
+        
+        if (!summary[fullName]) {
+          summary[fullName] = { name: displayName, count: 0 };
+        }
+        summary[fullName].count += 1;
       }
     });
-    return Object.entries(summary).sort((a, b) => a[0].localeCompare(b[0]));
+    return Object.values(summary).sort((a, b) => a.name.localeCompare(b.name));
   }
 
   const weekDates = getWeekDates();
@@ -385,7 +414,7 @@ const WeeklyPlanner = () => {
           
           {sessionsSummary.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {sessionsSummary.map(([name, count]) => (
+              {sessionsSummary.map(({name, count}) => (
                 <div key={name} className="flex items-center justify-between p-4 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200/50 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
                   <span className="font-medium text-slate-800 text-sm">{name}</span>
                   <span className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-full text-xs font-bold shadow-md">
@@ -406,6 +435,6 @@ const WeeklyPlanner = () => {
       </div>
     </div>
   );
-};
+}
 
-export default WeeklyPlanner;
+export default App;
