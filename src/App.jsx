@@ -32,52 +32,54 @@ function App() {
     }
   }, [appointments, loading]);
 
-  async function loadData() {
-    try {
-      console.log('🔄 Chargement des données...');
-      const response = await fetch('/api/appointments');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('✅ Données chargées:', data);
-      
-      if (data.appointments && Object.keys(data.appointments).length > 0) {
-        setAppointments(data.appointments);
-        console.log('📊 Rendez-vous trouvés:', Object.keys(data.appointments).length);
-      } else {
-        console.log('ℹ️ Aucun rendez-vous trouvé');
-      }
-    } catch (error) {
-      console.error('❌ Erreur de chargement:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
+ // Remplacez les fonctions loadData() et saveData()
 
-  async function saveData() {
-    try {
-      console.log('💾 Sauvegarde des données...', Object.keys(appointments).length, 'rendez-vous');
-      const response = await fetch('/api/appointments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ appointments }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log('✅ Données sauvegardées:', result);
-    } catch (error) {
-      console.error('❌ Erreur de sauvegarde:', error);
+async function loadData() {
+  try {
+    console.log('🔄 Chargement des données...');
+    const response = await fetch('/api/appointments');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    
+    const data = await response.json();
+    console.log('✅ Données chargées:', data);
+    
+    if (data && Object.keys(data).length > 0) {
+      setAppointments(data);
+      console.log('📊 Rendez-vous trouvés:', Object.keys(data).length);
+    } else {
+      console.log('ℹ️ Aucun rendez-vous trouvé');
+    }
+  } catch (error) {
+    console.error('❌ Erreur de chargement:', error);
+  } finally {
+    setLoading(false);
   }
+}
+
+async function saveData() {
+  try {
+    console.log('💾 Sauvegarde des données...', Object.keys(appointments).length, 'rendez-vous');
+    const response = await fetch('/api/appointments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ appointments }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('✅ Données sauvegardées:', result);
+  } catch (error) {
+    console.error('❌ Erreur de sauvegarde:', error);
+  }
+}
 
   function getMonday(date) {
     const d = new Date(date);
