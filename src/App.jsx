@@ -75,7 +75,7 @@ async function saveData() {
     }
     
     const result = await response.json();
-    console.log('✅ Données sauvegardées:', result);
+    console.log('✅ Données sauvegard ées:', result);
   } catch (error) {
     console.error('❌ Erreur de sauvegarde:', error);
   }

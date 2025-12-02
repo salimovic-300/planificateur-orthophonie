@@ -2,8 +2,11 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      // CORRECTION : Utilisez "./*" pour pointer vers la racine du projet
+      "@/*": ["./*"] 
     }
   },
-  "exclude": ["node_modules", ".next"]
+  
+  "include": ["next.env.d.ts", "**/*.js", "**/*.jsx"],
+  "exclude": ["node_modules"]
 }
